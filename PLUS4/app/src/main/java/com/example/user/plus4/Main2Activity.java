@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -74,67 +76,78 @@ implements View.OnClickListener {
         final int[] x;
         x= new int[11];
 
-        x[count_game]=random();
+        x[count_game]=random(10);
         set_q(x[count_game]);
+
         BroadcastReceiver bb = new BroadcastReceiver() {
+            int mm=9;
             @Override
             public void onReceive(Context context, Intent intent){
                 Bundle myBundle= intent.getExtras();
                 int myInt=myBundle.getInt("background_service");
-                int nowint=myInt;
-                if(myInt==10||ans!=0){  //未回答 未超時
+                new CountDownTimer(1000, 100) {
+                    public void onTick(long millisUntilFinished){
+
+                    }
+                    public void onFinish() {
+                        mm--;
+                    }
+                }.start();
+                if(mm==0||ans!=0){  //未回答 未超時
                     if(correct==ans){  //答對分數計算
-                        if(count_game==5){
-                            player=player+2*(150-15*nowint);
-                        }else {
-                            player += 150 - 15 * nowint;
-                        }
-                        qu.setText("恭喜答對囉!獲得"+player+"分");
+                        player += 20 * mm;
                         score1.setProgress(player);
                         num1.setText(""+player);
                     }
-                    else{
-                        qu.setText("答錯囉87"); //答錯
-                    }
 
-                    if(correct==random()) //判斷電腦對錯給分
+                    if(correct==random(4)) //判斷電腦對錯給分
                     {
-                        if(computer==5){
-                            computer=computer+2*(150-15*nowint);
-                        }else {
-                            computer += 150 - 15 * nowint;
-                        }
+                        computer+=(20*random(10));
                         score2.setProgress(computer);
                         num2.setText(""+computer);
                     }
-                    qu.setText("結束囉");
                     next=1;
                     count_game++;
+                    tt.setText("10");
                 }
-                else if(myInt<11&&ans==0){
-                    tt.setText(String.valueOf(10-myInt));
+                else if(mm>0&&ans==0){
+                    tt.setText(String.valueOf(mm));
                 }
                 if(count_game==6){
+                    tt.setText("0000");
+                    try{
+                        Thread thread = Thread.currentThread();
+                        thread.sleep(1500);
+                    }catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                     Intent it= new Intent();
                     it.setClass(Main2Activity.this , Main3Activity.class);
-                    it.putExtra("player",player);
+                    if(correct==ans) {
+                        it.putExtra("player", player + 20 * (mm-1));
+                    }
+                    else{
+                        it.putExtra("player", player);
+                    }
                     it.putExtra("computer",computer);
                     startActivityForResult(it,0);
+
                 }
-                else {
+                else if(count_game<6){
                     if (next == 1) {
                         next = 0;
-                        x[count_game]=random();
-                        for(int i=1;i<6;i++){
+                        x[count_game]=random(10);
+                        for(int i=1;i<count_game;i++){
                             if( x[count_game]== x[i]){
                                 do{
-                                    x[count_game]=random();
-                                }while(x[count_game]!= x[i]);
+                                    x[count_game]=random(10);
+                                }while(x[count_game] == x[i]);
                             }
                         }
                         set_q(x[count_game]);
                         ans = 0;
-
+                        mm=10;
                     }
                 }
                 //i.putExtra("stop", nowint);
@@ -142,14 +155,14 @@ implements View.OnClickListener {
         };
         IntentFilter intentFilter=new IntentFilter("MyMessage");
         registerReceiver(bb,intentFilter);
+
     }
 
     public void set_q(int x){
         try {
-
             db = openOrCreateDatabase("databases.db", MODE_PRIVATE, null);
             inputquestion();
-            c = db.rawQuery("SELECT * FROM table01 WHERE _id=" + x, null);  //尚未產生亂數
+            c = db.rawQuery("SELECT * FROM table01 WHERE _id=" + x, null);
             c.moveToFirst();
             do {
                 qu.setText(c.getString(1));
@@ -191,9 +204,9 @@ implements View.OnClickListener {
         deleteDatabase("databases.db");
     }
 
-    public int random(){
+    public int random(int y){
         Random x = new Random();
-        return x.nextInt(10)+1;
+        return x.nextInt(y)+1;
     }
 
     public void inputquestion(){
@@ -241,7 +254,7 @@ implements View.OnClickListener {
         c4.put("a2",String.valueOf("30"));
         c4.put("a3",String.valueOf("0"));
         c4.put("a4",String.valueOf("10"));
-        c4.put("correct", 2);
+        c4.put("correct", 3);
         db.insert("table01",null,c4);
 
         ContentValues c5= new ContentValues();

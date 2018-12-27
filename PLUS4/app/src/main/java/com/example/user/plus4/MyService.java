@@ -31,7 +31,7 @@ public class MyService extends Service {
                         e.printStackTrace();
                     }
                     count++;
-                    if (count == 11) count = 0;
+
                 }
             }
         }.start();

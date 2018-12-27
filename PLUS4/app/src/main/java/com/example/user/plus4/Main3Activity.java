@@ -12,7 +12,7 @@ public class Main3Activity extends AppCompatActivity
 implements View.OnClickListener {
     Button b1;
     TextView p1,p2,test;
-    int player=0,computer=0;
+    int player,computer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,7 +23,7 @@ implements View.OnClickListener {
         test=findViewById(R.id.test);
         b1.setOnClickListener(this);
 
-        Intent it=new Intent();
+        Intent it= getIntent();
         player=it.getIntExtra("player",0);
         computer=it.getIntExtra("computer",0);
 
