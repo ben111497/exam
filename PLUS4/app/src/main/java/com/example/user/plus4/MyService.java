@@ -2,6 +2,7 @@ package com.example.user.plus4;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 
 public class MyService extends Service {
@@ -21,14 +22,16 @@ public class MyService extends Service {
                 while(flag){
                     Intent i=new Intent("MyMessage");
                     i.putExtra("background_service",count);
+                //    Bundle myBundle= i.getExtras();
+                //    count=myBundle.getInt("stop");
                     sendBroadcast(i);
-                    count++;
-                    try{
+                    try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException e) {
+                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if(count==11)count=0;
+                    count++;
+                    if (count == 11) count = 0;
                 }
             }
         }.start();

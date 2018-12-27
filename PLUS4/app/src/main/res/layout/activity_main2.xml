@@ -126,28 +126,32 @@
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="a1" />
+            android:text="a1"
+            android:textSize="20sp" />
 
         <Button
             android:id="@+id/a2"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="a2" />
+            android:text="a2"
+            android:textSize="20sp" />
 
         <Button
             android:id="@+id/a3"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="a3" />
+            android:text="a3"
+            android:textSize="20sp" />
 
         <Button
             android:id="@+id/a4"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="a4" />
+            android:text="a4"
+            android:textSize="20sp" />
     </LinearLayout>
 
     <TextView
