@@ -4,22 +4,27 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 
 public class Main2Activity extends AppCompatActivity
 implements View.OnClickListener {
-    private Timer timer;
-    private TimerTask task;
     ProgressBar scroe1,score2;
     int player=0;
     int computer=0;
@@ -28,6 +33,9 @@ implements View.OnClickListener {
     int ans=0;
     int start_1=0;
     int question_count=1;
+    Cursor cursor = null;
+    SQLiteDatabase db = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,10 +73,45 @@ implements View.OnClickListener {
 
 
         if(start_1==0) {
+            int btn=0;
+            String[] correct;
+            correct=new String[4];
+
+            copyDB();
             Intent i = new Intent();
             i.setClass(Main2Activity.this, MyService.class);
             startService(i);
             Toast.makeText(Main2Activity.this, "準備開始!!", Toast.LENGTH_SHORT).show();
+            try {
+                db = openOrCreateDatabase("database.db", MODE_PRIVATE, null);
+                String str = "CREATE TABLE ggtext(_id INTEGER,title INTEGER,question TEXT ,answer TEXT,correct TEXT)";
+                db.execSQL(str);
+                Cursor c = db.rawQuery("SELECT title FROM ggtext WHERE title=" + 1, null); //未查 讀取資料表 未改
+                c.moveToFirst();
+                do {
+                    qu.setText(c.getString(2));
+                    correct[btn] = c.getString(4);
+                    switch (btn) {
+                        case 0:
+                            a1.setText(c.getString(3));
+                            break;
+                        case 1:
+                            a2.setText(c.getString(3));
+                            break;
+                        case 2:
+                            a3.setText(c.getString(3));
+                            break;
+                        case 3:
+                            a4.setText(c.getString(3));
+                            break;
+                    }
+                    btn++;
+                } while (c.moveToNext());
+                btn = 0;
+            }catch (Exception e){
+                Toast.makeText(getApplicationContext(),"查尋失敗!請建立或開啟資料庫(資料表)",Toast.LENGTH_SHORT).show();
+            }
+
             start_1=100;
         }
         else if(start_1==1){
@@ -109,7 +152,34 @@ implements View.OnClickListener {
         }
     }
 
-    public void count_score(){
-
+    private void copyDB(){
+//data/data/packageName/databases/
+        File mkdir = new File(getFilesDir().getParent(),"database");
+//建立 databases資料夾
+        if (!mkdir.exists()) mkdir.mkdirs();
+        Log.e("TAG", "copyDb: mkdir="+mkdir.getPath());
+//資料庫檔案
+        File file = new File(mkdir,"ggtest.db");
+//只是在程式第一次啟動時建立
+        if(!file.exists()){
+//獲取 assets管理
+            AssetManager assets = getAssets();
+//執行檔案複製
+            try {
+                InputStream open = assets.open("ggtest.db");
+                FileOutputStream fos = new FileOutputStream(file);
+                byte[] bs = new byte[1024];
+                int len ;
+                while ((len = open.read(bs))!=-1){
+                    fos.write(bs,0,len);
+                }
+                fos.flush();
+                fos.close();
+                open.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Log.e("TAG", "copyDb: exists="+file.getPath());
     }
 }
