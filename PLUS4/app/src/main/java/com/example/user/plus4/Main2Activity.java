@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 
 public class Main2Activity extends AppCompatActivity
 implements View.OnClickListener {
@@ -76,41 +76,43 @@ implements View.OnClickListener {
             int btn=0;
             String[] correct;
             correct=new String[4];
-
-            copyDB();
             Intent i = new Intent();
             i.setClass(Main2Activity.this, MyService.class);
             startService(i);
             Toast.makeText(Main2Activity.this, "準備開始!!", Toast.LENGTH_SHORT).show();
-            try {
-                db = openOrCreateDatabase("database.db", MODE_PRIVATE, null);
-                String str = "CREATE TABLE ggtext(_id INTEGER,title INTEGER,question TEXT ,answer TEXT,correct TEXT)";
-                db.execSQL(str);
-                Cursor c = db.rawQuery("SELECT title FROM ggtext WHERE title=" + 1, null); //未查 讀取資料表 未改
-                c.moveToFirst();
-                do {
-                    qu.setText(c.getString(2));
-                    correct[btn] = c.getString(4);
-                    switch (btn) {
-                        case 0:
-                            a1.setText(c.getString(3));
-                            break;
-                        case 1:
-                            a2.setText(c.getString(3));
-                            break;
-                        case 2:
-                            a3.setText(c.getString(3));
-                            break;
-                        case 3:
-                            a4.setText(c.getString(3));
-                            break;
-                    }
-                    btn++;
-                } while (c.moveToNext());
-                btn = 0;
-            }catch (Exception e){
-                Toast.makeText(getApplicationContext(),"查尋失敗!請建立或開啟資料庫(資料表)",Toast.LENGTH_SHORT).show();
+        try {
+
+            db = openOrCreateDatabase("database.db", MODE_PRIVATE, null);
+            DBManager cv=null;
+            cv.copyDatabase();
+            Cursor c = db.rawQuery("SELECT * FROM ggtext WHERE title=" + 1, null); //未查 讀取資料表 未改
+            c.moveToFirst();
+            do {
+                qu.setText(c.getString(2));
+                correct[btn] = c.getString(4);
+                switch (btn) {
+                    case 0:
+                        a1.setText(c.getString(3));
+                        break;
+                    case 1:
+                        a2.setText(c.getString(3));
+                        break;
+                    case 2:
+                        a3.setText(c.getString(3));
+                        break;
+                    case 3:
+                        a4.setText(c.getString(3));
+                        break;
+                }
+                btn++;
+            } while (c.moveToNext());
+            //  btn = 0;
+        }catch (Exception e){
+            qu.setText(""+e);
             }
+
+               // Toast.makeText(getApplicationContext(),"查尋失敗!請建立或開啟資料庫(資料表)",Toast.LENGTH_SHORT).show();
+
 
             start_1=100;
         }
@@ -151,35 +153,34 @@ implements View.OnClickListener {
                 break;
         }
     }
-
-    private void copyDB(){
-//data/data/packageName/databases/
-        File mkdir = new File(getFilesDir().getParent(),"database");
-//建立 databases資料夾
-        if (!mkdir.exists()) mkdir.mkdirs();
-        Log.e("TAG", "copyDb: mkdir="+mkdir.getPath());
-//資料庫檔案
-        File file = new File(mkdir,"ggtest.db");
-//只是在程式第一次啟動時建立
-        if(!file.exists()){
-//獲取 assets管理
-            AssetManager assets = getAssets();
-//執行檔案複製
+    public class DBManager {
+        private final int BUFFER_SIZE = 10000;
+        public static final String DB_NAME = "database"; //儲存的資料庫
+        public static final String PACKAGE_NAME = "com.example.user.plus4";
+        //工程包名
+        public  final String DB_PATH = "/data" + Environment.getDataDirectory().getAbsolutePath() + "/" + PACKAGE_NAME+"/databases";
+        //在手機裡存放資料庫的位置
+        private Context context;
+        DBManager(Context context) {this.context = context;   }
+        public void copyDatabase() {
+            String dbfile=DB_PATH + "/" + DB_NAME ;
             try {
-                InputStream open = assets.open("ggtest.db");
-                FileOutputStream fos = new FileOutputStream(file);
-                byte[] bs = new byte[1024];
-                int len ;
-                while ((len = open.read(bs))!=-1){
-                    fos.write(bs,0,len);
+                //執行資料庫匯入
+                InputStream is = this.context.getResources().getAssets().open("ggtest"); //欲匯入的資料庫
+                FileOutputStream fos = new FileOutputStream(dbfile);
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int count = 0;
+                while ((count = is.read(buffer)) > 0) {
+                    fos.write(buffer, 0, count);
                 }
-                fos.flush();
-                fos.close();
-                open.close();
+                fos.close();//關閉輸出流
+                is.close();//關閉輸入流
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        Log.e("TAG", "copyDb: exists="+file.getPath());
-    }
+        }}
+
+
 }
